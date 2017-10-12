@@ -270,7 +270,7 @@ contract BigToken is ERC20, Ownable {
         return true;
     }
 
-    function getBalanceToMint(address _address) public returns (uint256){
+    function getBalanceToMint(address _address) public constant returns (uint256){
         if(!enabledMint) return 0;
         if(!members[_address]) return 0;
         if(lastMint[_address] == 0) return 0;
@@ -321,6 +321,10 @@ contract BigToken is ERC20, Ownable {
         commissionPercent = _commission;
     }
 
+    function setMintPerBlock(uint256 _mintPerBlock) onlyOwner public{
+        mintPerBlock = _mintPerBlock;
+    }
+
     function setInvested(address _address) onlyOwner public{
         invested[_address] = true;
         if(confirmed[_address] && !members[_address]){
@@ -330,7 +334,7 @@ contract BigToken is ERC20, Ownable {
         }
     }
 
-    function isMember(address _address) public returns(bool){
+    function isMember(address _address) public constant returns(bool){
         return members[_address];
     }
 
@@ -343,9 +347,11 @@ contract Crowdsale is Ownable{
 
     BigToken public token;
     uint public collected;
+    address public benefeciar;
 
-    function Crowdsale(address _token){
+    function Crowdsale(address _token, address _benefeciar){
         token = BigToken(_token);
+        benefeciar = _benefeciar;
         owners[msg.sender] = true;
     }
 
@@ -366,16 +372,20 @@ contract Crowdsale is Ownable{
     }
 
 
-    function confirmAddress(address _address) onlyOwner{
+    function confirmAddress(address _address) public onlyOwner{
         token.confirm(_address);
     }
 
-    function unconfirmAddress(address _address) onlyOwner{
+    function unconfirmAddress(address _address) public onlyOwner{
         token.unconfirm(_address);
     }
 
-    function withdraw() onlyOwner payable {
-        msg.sender.transfer(this.balance);
+    function setBenefeciar(address _benefeciar) public onlyOwner{
+        benefeciar = _benefeciar;
+    }
+
+    function withdraw() public onlyOwner{
+        benefeciar.transfer(this.balance);
     }
 
 }
